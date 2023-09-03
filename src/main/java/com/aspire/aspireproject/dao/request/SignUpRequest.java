@@ -1,8 +1,11 @@
 package com.aspire.aspireproject.dao.request;
 
+import lombok.AllArgsConstructor;
 import lombok.Getter;
+import lombok.NoArgsConstructor;
 
 @Getter
+@AllArgsConstructor
 public class SignUpRequest {
     private String firstName;
     private String lastName;
@@ -11,23 +14,8 @@ public class SignUpRequest {
 
     private String role;
 
-    public void setFirstName(String firstName) {
-        this.firstName = firstName;
-    }
-
-    public void setLastName(String lastName) {
-        this.lastName = lastName;
-    }
-
     public void setUsername(String username) {
         this.username = username;
     }
 
-    public void setPassword(String password) {
-        this.password = password;
-    }
-
-    public void setRole(String role) {
-        this.role = role;
-    }
 }

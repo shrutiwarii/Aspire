@@ -11,7 +11,8 @@ import java.util.Date;
 @Builder
 public class ScheduledLoanRepayment {
     private Date date;
-    private double remainingAmount;
+    private Double remainingAmount;
     private LoanStatus status;
-    private int termNo;
+    private Integer termNo;
+    private Date paymentDate;
 }

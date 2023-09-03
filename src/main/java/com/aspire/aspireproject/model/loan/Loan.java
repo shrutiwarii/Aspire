@@ -17,8 +17,8 @@ public class Loan {
 
     @Id
     private String id;
-    private double amount;
-    private int term;
+    private Double amount;
+    private Integer term;
     private String username;
 
     private String assignee;
@@ -28,4 +28,6 @@ public class Loan {
     private String description;
     private Date dateCreated;
     private List<ScheduledLoanRepayment> scheduledLoanRepayment;
+    private Integer termsLeft;
+    private Double amountRemaining;
 }

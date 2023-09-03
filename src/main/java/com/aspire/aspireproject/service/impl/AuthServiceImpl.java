@@ -10,8 +10,6 @@ import com.aspire.aspireproject.repository.UserRepository;
 import com.aspire.aspireproject.service.AuthService;
 import com.aspire.aspireproject.service.JwtService;
 import lombok.RequiredArgsConstructor;
-import org.springframework.security.authentication.AuthenticationManager;
-import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 
@@ -21,7 +19,6 @@ public class AuthServiceImpl implements AuthService {
     private final UserRepository userRepository;
     private final JwtService jwtService;
     private final PasswordEncoder passwordEncoder;
-    private final AuthenticationManager authenticationManager;
 
     public boolean isUserAlreadyRegistered(String username){
         return userRepository.existsByUsername(username);
