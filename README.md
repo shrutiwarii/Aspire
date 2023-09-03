@@ -57,7 +57,7 @@ To use the Aspire Project, follow these steps:
 
 ### API Documentation
 
-The Aspire Project provides RESTful APIs for loan application and repayment. You can find detailed API documentation in the API Documentation file.
+The Aspire Project provides RESTful APIs for loan application and repayment. You can find detailed API documentation in the [API Documentation file](https://docs.google.com/document/d/1TowCKT2EFHnVR2Oa5qJBI3AhB2c1uqml_f4qE_n3NQA/edit).
 
 ### Database Configuration
 ```bash
