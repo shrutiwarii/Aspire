@@ -91,6 +91,18 @@ public class LoanServiceImpl implements LoanService {
         return loanHelper.convertToLoanStatusResponse(myLoans);
     }
 
+    /**
+     * Processes a payment for a specific term of a loan.
+     * This method validates the provided payment request, simulates payment processing,
+     * and updates the loan's status if the payment is successful.
+     *
+     * @param token The authentication token for the payment request.
+     * @param request The payment request containing the amount, term number, source, and loan ID.
+     * @return A PaymentResponse object representing the result of the payment operation.
+     * @throws InvalidParameterException If the payment request is missing required fields
+     *         or if the payment fails for any reason.
+     * @throws InvalidLoanIdException If the provided loan ID is not valid or does not exist.
+     */
     @Override
     public PaymentResponse payTermLoan(String token, PaymentRequest request) {
         if(request.getAmount()==0 || request.getTermNo()==0 || request.getSource()==null || request.getId()==null) {
@@ -113,6 +125,16 @@ public class LoanServiceImpl implements LoanService {
         throw new InvalidParameterException("Payment failed");
     }
 
+    /**
+     * Approves or rejects a loan application based on the provided token and loan ID.
+     * This method validates the user's permissions and the loan's status before approving or rejecting the loan.
+     *
+     * @param token The authentication token of the user performing the approval.
+     * @param loanId The unique identifier of the loan application to be approved or rejected.
+     * @throws InvalidLoanIdException If the provided loan ID is not valid or does not exist.
+     * @throws UsernameNotFoundException If the user specified by the token is not found or has an invalid role.
+     * @throws InvalidParameterException If the user does not have sufficient permissions, or if the loan is not in a PENDING state.
+     */
     @Override
     public void approveLoan(String token, String loanId) {
         String username = jwtService.extractUserName(token);
