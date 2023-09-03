@@ -14,4 +14,5 @@ public class ScheduledLoanRepayment {
     private Double remainingAmount;
     private LoanStatus status;
     private Integer termNo;
+    private Date paymentDate;
 }

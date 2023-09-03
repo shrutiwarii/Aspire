@@ -2,17 +2,14 @@ package com.aspire.aspireproject.controller;
 
 import com.aspire.aspireproject.dao.request.PaymentRequest;
 import com.aspire.aspireproject.dao.request.TakeLoanRequest;
-import com.aspire.aspireproject.dao.response.LoanStatusResponse;
-import com.aspire.aspireproject.dao.response.PaymentResponse;
-import com.aspire.aspireproject.dao.response.TakeLoanResponse;
+import com.aspire.aspireproject.dao.response.*;
 import com.aspire.aspireproject.model.loan.LoanStatus;
 import com.aspire.aspireproject.service.LoanService;
-import com.aspire.aspireproject.service.mock.MockPaymentService;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
-import java.security.InvalidParameterException;
 import java.util.List;
 import java.util.Map;
 
@@ -55,21 +52,32 @@ public class LoanController {
         try {
             String loanId = requestBody.get("loanId");
             loanService.approveLoan(token.split(" ")[1], loanId);
-            return ResponseEntity.ok("Yay loan approved successfully. Load ID: "+loanId);
+            MessageResponse response = MessageResponse.builder()
+                    .message("Yay loan approved successfully. Load ID: "+loanId)
+                    .status(HttpStatus.OK)
+                    .build();
+            return ResponseEntity.status(HttpStatus.OK).body(response);
         }catch (Exception e){
-            return ResponseEntity.badRequest().body("Failed to approve the loan: "+e);
+            ErrorResponse errorResponse = ErrorResponse.builder()
+                    .message(e.getMessage())
+                    .status(HttpStatus.BAD_REQUEST)
+                    .build();
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(errorResponse);
         }
     }
 
     @GetMapping("/getLoanById")
-    public ResponseEntity<String> getLoanById( String loanId){
-        return ResponseEntity.ok("Successful and your loan id is: Currently your loan is in PENDING state. You will get a notification when it moves to APPROVED");
-
+    public ResponseEntity<?> getLoanById(@RequestHeader("Authorization") String token, @RequestParam String loanId){
+        try {
+            LoanStatusResponse response = loanService.getLoanById(token.split(" ")[1], loanId);
+            return ResponseEntity.ok(response);
+        }catch (Exception e){
+            ErrorResponse errorResponse = ErrorResponse.builder()
+                    .message(e.getMessage())
+                    .status(HttpStatus.NOT_FOUND)
+                    .build();
+            return ResponseEntity.status(HttpStatus.NOT_FOUND).body(errorResponse);
+        }
     }
 
-    @PostMapping("/approveLoanById")
-    public ResponseEntity<String> approveLoanById(){
-        return ResponseEntity.ok("Successful and your loan id is: Currently your loan is in PENDING state. You will get a notification when it moves to APPROVED");
-
-    }
 }

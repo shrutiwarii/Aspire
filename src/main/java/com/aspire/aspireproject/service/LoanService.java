@@ -23,4 +23,6 @@ public interface LoanService {
 
     PaymentResponse payTermLoan(String token, PaymentRequest request);
      void approveLoan(String token, String loadId);
+
+     LoanStatusResponse getLoanById(String token, String loanId);
 }

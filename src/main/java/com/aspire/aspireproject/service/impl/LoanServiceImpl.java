@@ -105,20 +105,37 @@ public class LoanServiceImpl implements LoanService {
      */
     @Override
     public PaymentResponse payTermLoan(String token, PaymentRequest request) {
+        String username = jwtService.extractUserName(token);
+        Loan loan = loanRepository.findById(request.getId()).orElseThrow(()->new InvalidLoanIdException("Loan id is invalid"));
+
+        //Check if user is the owner of the loan
+        if(!Objects.equals(loan.getUsername(), username)) throw new InvalidParameterException("You cannot pay this loan as you are not the owner of this loan");
+
         if(request.getAmount()==0 || request.getTermNo()==0 || request.getSource()==null || request.getId()==null) {
             throw new InvalidParameterException("Please provide the required fields");
         }
-        Loan loan = loanRepository.findById(request.getId()).orElseThrow(()->new InvalidLoanIdException("Loan id is invalid"));
-        loanHelper.validatePaymentRequest(loan, request.getAmount());
+
+        loanHelper.validatePaymentRequest(loan, request);
+        Loan updatedLoan;
+        PaymentResponse pr = new PaymentResponse();
+
+        //check if the term date has passed then charge as per 1% interest per day and add it to the total amount to be paid and inform the customer in the response message
+        if(loanHelper.isPreviousTermPayment(loan, request)) {
+            updatedLoan = loanHelper.previousTermLoanUpdate(loan, request);
+            pr.setMessage("Updated a previous term with 1% interest");
+        }else{
+            updatedLoan = loanHelper.updateLoan(loan,request);
+            pr.setMessage("Returning the excess amount");
+        }
 
         // Simulate payment processing.
         boolean paymentSuccessful = mockPaymentService.processPayment(request.getAmount(), request.getSource(), request.getTermNo());
         if (paymentSuccessful){
-            Loan updatedLoan = loanHelper.updateLoan(loan,request);
+
             loanRepository.save(updatedLoan);
-            PaymentResponse pr = new PaymentResponse();
             pr.setTermNo(request.getTermNo());
             pr.setStatus(LoanStatus.PAID);
+
             return pr;
         }
 
@@ -146,6 +163,7 @@ public class LoanServiceImpl implements LoanService {
         if (!LoanStatus.PENDING.equals(loan.getStatus()))
             throw new InvalidParameterException("Loan is not in PENDING state. Can't approve");
 
+        loan.setAssignee(username);
         //Set conditions for rejecting the loan
         if(loan.getAmount()>1000000){
             loan.setStatus(LoanStatus.REJECTED);
@@ -153,5 +171,30 @@ public class LoanServiceImpl implements LoanService {
             loan.setStatus(LoanStatus.APPROVED);
         }
         loanRepository.save(loan);
+    }
+
+    /**
+     * Retrieve the details of a loan by its unique identifier.
+     * This method fetches the loan information based on the provided loan ID and token for authentication.
+     * It checks if the requester is the owner of the loan or has the necessary permissions to access the details.
+     *
+     * @param token The authentication token of the user making the request.
+     * @param loanId The unique identifier of the loan to retrieve.
+     * @return A LoanStatusResponse object containing the loan's status, repayment schedule, description, and remaining terms.
+     * @throws InvalidLoanIdException If the provided loan ID is not valid or does not exist.
+     * @throws InvalidParameterException If the requester is not the owner of the loan or lacks the required permissions to access the details.
+     */
+    @Override
+    public LoanStatusResponse getLoanById(String token, String loanId) {
+        Loan loan = loanRepository.findById(loanId).orElseThrow(()-> new InvalidLoanIdException("Invalid loan Id"));
+        String username = jwtService.extractUserName(token);
+        User user = userRepository.findByUsername(username).orElseThrow(() -> new UsernameNotFoundException("Invalid email or username"));
+        if (!username.equals(loan.getUsername())&&!user.getRole().equals(Role.ADMIN)) throw new InvalidParameterException("You are not the owner of this loan Id so you can't see the details");
+        return LoanStatusResponse.builder()
+                .id(loanId).status(loan.getStatus())
+                .listOfRepayment(loan.getScheduledLoanRepayment())
+                .description(loan.getDescription())
+                .termsLeft(loan.getTermsLeft())
+                .build();
     }
 }

@@ -16,5 +16,4 @@ public class PaymentRequest {
     private double amount;
     private String source;
     private String description;
-    private String currentDate;
 }

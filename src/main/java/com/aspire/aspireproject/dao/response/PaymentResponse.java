@@ -10,4 +10,5 @@ import lombok.NoArgsConstructor;
 public class PaymentResponse {
     private int termNo;
     private LoanStatus status;
+    private String message;
 }
