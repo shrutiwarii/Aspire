@@ -1,7 +1,6 @@
 package com.aspire.aspireproject.service.helper;
 import com.aspire.aspireproject.dao.request.PaymentRequest;
 import com.aspire.aspireproject.dao.response.LoanStatusResponse;
-import com.aspire.aspireproject.dao.response.PaymentResponse;
 import com.aspire.aspireproject.model.loan.Loan;
 import com.aspire.aspireproject.model.loan.LoanStatus;
 import com.aspire.aspireproject.model.loan.ScheduledLoanRepayment;
