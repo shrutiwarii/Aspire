@@ -58,9 +58,6 @@ class AuthServiceImplTest {
                 .password("Test")
                 .build();
 
-        //("John", "Doe", "john@example.com", "encodedPassword", Role.CUSTOMER);
-
-        // Mock userRepository.findByUsername
         when(userRepository.findByUsername(signInRequest.getUsername())).thenReturn(java.util.Optional.of(user));
 
         // Mock jwtService.generateToken

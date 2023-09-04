@@ -8,6 +8,5 @@ import lombok.Setter;
 public class TakeLoanRequest {
     private Double amount;
     private Integer term;
-    private String username;
     private String description;
 }

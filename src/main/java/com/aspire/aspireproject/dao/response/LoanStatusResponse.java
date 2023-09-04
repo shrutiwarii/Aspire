@@ -15,4 +15,5 @@ public class LoanStatusResponse {
     private LoanStatus status;
     private Integer termsLeft;
     private List<ScheduledLoanRepayment> listOfRepayment;
+    private String username;
 }

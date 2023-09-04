@@ -33,6 +33,7 @@ public class AuthServiceImpl implements AuthService {
         userRepository.save(user);
     }
 
+    //TODO(shrutiwarii): Catch errors
     @Override
     public JwtAuthenticationResponse signin(SignInRequest request) {
         var user = userRepository.findByUsername(request.getUsername())

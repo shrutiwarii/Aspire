@@ -22,7 +22,7 @@ public class JwtServiceImpl implements JwtService {
     private String jwtSigningKey;
     @Override
     public String extractUserName(String token) {
-        return extractClaim(token, Claims::getSubject);
+        return extractClaim(token.split(" ")[1], Claims::getSubject);
     }
 
     @Override
@@ -33,7 +33,7 @@ public class JwtServiceImpl implements JwtService {
     @Override
     public boolean isTokenValid(String token, UserDetails userDetails) {
         final String userName = extractUserName(token);
-        return (userName.equals(userDetails.getUsername())) && !isTokenExpired(token);
+        return (userName.equals(userDetails.getUsername())) && !isTokenExpired(token.split(" ")[1]);
     }
 
     private <T> T extractClaim(String token, Function<Claims, T> claimsResolvers) {

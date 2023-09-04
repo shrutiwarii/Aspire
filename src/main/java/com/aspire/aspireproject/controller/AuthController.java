@@ -8,8 +8,6 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
-import java.util.Map;
-
 @RestController
 @RequestMapping("/aspire/v1/auth")
 public class AuthController {
@@ -22,7 +20,7 @@ public class AuthController {
     }
 
     @PostMapping("/signup")
-    public ResponseEntity<String > signup(@RequestBody SignUpRequest request) {
+    synchronized public ResponseEntity<String > signup(@RequestBody SignUpRequest request) {
         try{
             authService.signup(request);
             return ResponseEntity.ok("Successful");
@@ -36,7 +34,7 @@ public class AuthController {
         return ResponseEntity.ok(authService.signin(request));
     }
 
-    @PostMapping("/logout")
+    @PostMapping("/signout")
     public ResponseEntity<String> logoutUser(String username){
         return ResponseEntity.ok("logged out successfully");
     }

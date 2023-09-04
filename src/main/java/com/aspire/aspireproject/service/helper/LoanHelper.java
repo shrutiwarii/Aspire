@@ -20,7 +20,7 @@ public class LoanHelper {
             calendar.setTime(date);
             calendar.add(Calendar.WEEK_OF_YEAR, term);
             Date termDate = calendar.getTime();
-            var scheduledLoan = ScheduledLoanRepayment.builder().remainingAmount(repaymentAmount).termNo(term).status(LoanStatus.PENDING).date(termDate).build();
+            ScheduledLoanRepayment scheduledLoan = ScheduledLoanRepayment.builder().remainingAmount(repaymentAmount).termNo(term).status(LoanStatus.PENDING).date(termDate).build();
             term--;
             list.add(scheduledLoan);
         }
@@ -35,6 +35,7 @@ public class LoanHelper {
                 .collect(Collectors.toList());
     }
 
+    //TODO: create new enum for term payments, loanStatus -> repaymentStatus
     public void validatePaymentRequest(Loan loan, PaymentRequest request){
 
         //Check if the term number is valid and it is in PENDING state
@@ -49,7 +50,7 @@ public class LoanHelper {
         if(!loan.getStatus().equals(LoanStatus.APPROVED) ) throw new InvalidParameterException("Loan is not approved");
 
         //Check if more than required amount is getting paid
-        if(loan.getAmountRemaining()<request.getAmount()) throw new InvalidParameterException("You are paying more than required amount. Please check the entered value");
+        if(loan.getAmountRemaining()<request.getAmount()) throw new InvalidParameterException("You are paying more than total remaining amount. Please check the entered value. Remaining amount: $"+loan.getAmountRemaining());
 
     }
 
@@ -94,6 +95,7 @@ public class LoanHelper {
         throw new InvalidParameterException("term not found");
     }
 
+    //TODO: add newAmountAfterInterest field
     public Loan previousTermLoanUpdate(Loan loan, PaymentRequest request){
         ScheduledLoanRepayment scheduledLoanRepayment = loan.getScheduledLoanRepayment().stream().filter(repayment -> repayment.getTermNo() == request.getTermNo()).findFirst().orElse(null);
         Date termDate = scheduledLoanRepayment.getDate();
@@ -115,6 +117,13 @@ public class LoanHelper {
         }
         else {
             throw new InvalidParameterException("Not enough funds");
+        }
+        //Check if all the statuses are PAID for scheduled re payments
+        boolean allPaid = loan.getScheduledLoanRepayment().stream()
+                .allMatch(repayment -> LoanStatus.PAID.equals(repayment.getStatus()));
+
+        if(allPaid){
+            loan.setStatus(LoanStatus.PAID);
         }
         loan.getScheduledLoanRepayment().set(loan.getScheduledLoanRepayment().indexOf(scheduledLoanRepayment), scheduledLoanRepayment);
         return loan;
