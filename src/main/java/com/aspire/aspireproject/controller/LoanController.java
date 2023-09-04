@@ -19,14 +19,17 @@ public class LoanController {
     @Autowired
     private LoanService loanService;
 
-    //TODO: Put split token in extractUsername() method
     @PostMapping("/requestLoan")
-    public ResponseEntity<TakeLoanResponse> requestLoan(@RequestHeader("Authorization") String token, @RequestBody TakeLoanRequest request){
+    public ResponseEntity<?> requestLoan(@RequestHeader("Authorization") String token, @RequestBody TakeLoanRequest request){
         try {
             TakeLoanResponse response = loanService.requestLoan(request,token);
             return ResponseEntity.ok(response);
         }catch (Exception e){
-            return ResponseEntity.badRequest().body(null);
+            ErrorResponse response = ErrorResponse.builder()
+                    .message("Failed to get loan: "+e.getMessage())
+                    .status(HttpStatus.BAD_REQUEST)
+                    .build();
+            return ResponseEntity.badRequest().body(response);
         }
 
     }
@@ -44,7 +47,11 @@ public class LoanController {
             PaymentResponse response = loanService.payTermLoan(token, paymentRequest);
             return ResponseEntity.ok(response);
         }catch (Exception e){
-            return  ResponseEntity.badRequest().body(e.getMessage());
+            ErrorResponse response = ErrorResponse.builder()
+                    .message("Failed to pay loan: "+e.getMessage())
+                    .status(HttpStatus.BAD_REQUEST)
+                    .build();
+            return  ResponseEntity.badRequest().body(response);
         }
     }
 

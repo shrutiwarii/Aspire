@@ -53,6 +53,7 @@ public class LoanServiceImpl implements LoanService {
     @Override
     public TakeLoanResponse requestLoan(TakeLoanRequest request, String token) {
         String username = jwtService.extractUserName(token);
+        loanHelper.validRequestLoan(request);
         Date date = new Date();
         List<ScheduledLoanRepayment> list = loanHelper.createRePayments(request.getAmount(), request.getTerm(), date);
         Loan loan = Loan.builder().username(username)
