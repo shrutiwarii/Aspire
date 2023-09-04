@@ -23,7 +23,7 @@ public class AuthServiceImpl implements AuthService {
     private final PasswordEncoder passwordEncoder;
 
     @Autowired
-    private AuthHelper authHelper;
+    public AuthHelper authHelper;
 
     public boolean isUserAlreadyRegistered(String username){
         return userRepository.existsByUsername(username);

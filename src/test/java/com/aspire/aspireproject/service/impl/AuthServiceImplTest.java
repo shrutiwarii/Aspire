@@ -18,7 +18,29 @@ import org.springframework.security.crypto.password.PasswordEncoder;
 import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.Mockito.*;
 
+import com.aspire.aspireproject.dao.request.SignInRequest;
+import com.aspire.aspireproject.dao.request.SignUpRequest;
+import com.aspire.aspireproject.dao.response.JwtAuthenticationResponse;
+import com.aspire.aspireproject.exception.UsernameAlreadyExistsException;
+import com.aspire.aspireproject.model.user.Role;
+import com.aspire.aspireproject.model.user.User;
+import com.aspire.aspireproject.repository.UserRepository;
+import com.aspire.aspireproject.service.JwtService;
+import com.aspire.aspireproject.service.helper.AuthHelper;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
+import org.mockito.Mock;
+import org.mockito.MockitoAnnotations;
+import org.springframework.security.crypto.password.PasswordEncoder;
+
+import java.util.Optional;
+
+import static org.junit.jupiter.api.Assertions.*;
+import static org.mockito.Mockito.*;
+
 class AuthServiceImplTest {
+
+    private AuthServiceImpl authService;
 
     @Mock
     private UserRepository userRepository;
@@ -29,53 +51,59 @@ class AuthServiceImplTest {
     @Mock
     private PasswordEncoder passwordEncoder;
 
-    private AuthServiceImpl authService;
+    @Mock
+    private AuthHelper authHelper;
 
     @BeforeEach
     void setUp() {
-        MockitoAnnotations.openMocks(this);
+        MockitoAnnotations.initMocks(this);
         authService = new AuthServiceImpl(userRepository, jwtService, passwordEncoder);
+        authService.authHelper = authHelper;
+    }
+
+    @Test
+    void testIsUserAlreadyRegisteredExistingUser() {
+        String username = "testuser";
+        when(userRepository.existsByUsername(username)).thenReturn(true);
+        assertTrue(authService.isUserAlreadyRegistered(username));
+    }
+
+    @Test
+    void testIsUserAlreadyRegisteredNonExistingUser() {
+        String username = "newuser";
+        when(userRepository.existsByUsername(username)).thenReturn(false);
+        assertFalse(authService.isUserAlreadyRegistered(username));
     }
 
 
-//    @Test
-//    void testSignup_UsernameAlreadyExists() {
-//        SignUpRequest signUpRequest = new SignUpRequest("John", "Doe", "john@example.com", "password", "USER");
-//
-//        // Mock userRepository.existsByUsername
-//        when(userRepository.existsByUsername(signUpRequest.getUsername())).thenReturn(true);
-//
-//        assertThrows(UsernameAlreadyExistsException.class, () -> authService.signup(signUpRequest));
-//    }
-
     @Test
-    void testSignin() {
-        SignInRequest signInRequest = new SignInRequest("john@example.com", "password");
-        User user =  User.builder()
-                .firstName("John")
-                .lastName("Doe")
-                .role(Role.CUSTOMER)
-                .username("John@abc.com")
-                .password("Test")
+    void testSigninValidUser() {
+        SignInRequest request = new SignInRequest();
+        request.setUsername("testuser");
+        request.setPassword("password");
+
+        User user = User.builder()
+                .username("testuser")
+                .password("encodedPassword")
+                .role(Role.ADMIN)
                 .build();
 
-        when(userRepository.findByUsername(signInRequest.getUsername())).thenReturn(java.util.Optional.of(user));
-
-        // Mock jwtService.generateToken
+        when(userRepository.findByUsername(request.getUsername())).thenReturn(Optional.of(user));
         when(jwtService.generateToken(user)).thenReturn("jwtToken");
 
-        JwtAuthenticationResponse response = authService.signin(signInRequest);
+        JwtAuthenticationResponse response = authService.signin(request);
+
         assertNotNull(response);
         assertEquals("jwtToken", response.getToken());
     }
 
     @Test
-    void testSignin_InvalidCredentials() {
-        SignInRequest signInRequest = new SignInRequest("john@example.com", "password");
+    void testSigninInvalidUser() {
+        SignInRequest request = new SignInRequest();
+        request.setUsername("nonexistentuser");
 
-        // Mock userRepository.findByUsername to return an empty Optional
-        when(userRepository.findByUsername(signInRequest.getUsername())).thenReturn(java.util.Optional.empty());
+        when(userRepository.findByUsername(request.getUsername())).thenReturn(Optional.empty());
 
-        assertThrows(IllegalArgumentException.class, () -> authService.signin(signInRequest));
+        assertThrows(IllegalArgumentException.class, () -> authService.signin(request));
     }
 }

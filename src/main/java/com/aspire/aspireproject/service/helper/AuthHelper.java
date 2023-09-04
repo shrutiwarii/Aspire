@@ -1,7 +1,6 @@
 package com.aspire.aspireproject.service.helper;
 
 import com.aspire.aspireproject.dao.request.SignUpRequest;
-import com.aspire.aspireproject.exception.UsernameAlreadyExistsException;
 import org.springframework.stereotype.Component;
 
 import java.security.InvalidParameterException;

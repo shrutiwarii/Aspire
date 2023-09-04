@@ -37,10 +37,10 @@ public class LoanServiceImpl implements LoanService {
     private final JwtService jwtService;
 
     @Autowired
-    private LoanHelper loanHelper;
+    public LoanHelper loanHelper;
 
     @Autowired
-    private MockPaymentService mockPaymentService;
+    public MockPaymentService mockPaymentService;
 
 
     /**
