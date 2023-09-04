@@ -18,13 +18,18 @@ import java.util.Map;
 public class LoanController {
     @Autowired
     private LoanService loanService;
+
     @PostMapping("/requestLoan")
-    public ResponseEntity<TakeLoanResponse> requestLoan(@RequestHeader("Authorization") String token, @RequestBody TakeLoanRequest request){
+    public ResponseEntity<?> requestLoan(@RequestHeader("Authorization") String token, @RequestBody TakeLoanRequest request){
         try {
-            TakeLoanResponse response = loanService.requestLoan(request,token.split(" ")[1]);
+            TakeLoanResponse response = loanService.requestLoan(request,token);
             return ResponseEntity.ok(response);
         }catch (Exception e){
-            return ResponseEntity.badRequest().body(null);
+            ErrorResponse response = ErrorResponse.builder()
+                    .message("Failed to get loan: "+e.getMessage())
+                    .status(HttpStatus.BAD_REQUEST)
+                    .build();
+            return ResponseEntity.badRequest().body(response);
         }
 
     }
@@ -32,18 +37,21 @@ public class LoanController {
 
     @GetMapping("/getLoans")
     public ResponseEntity<List<LoanStatusResponse>> getMyLoans(@RequestHeader("Authorization") String token, @RequestParam(required = false) LoanStatus status){
-        List<LoanStatusResponse> response = loanService.getMyLoans(token.split(" ")[1], status);
+        List<LoanStatusResponse> response = loanService.getMyLoans(token, status);
         return ResponseEntity.ok(response);
-
     }
 
     @PostMapping("/payLoan")
     public ResponseEntity<?> payTermLoan(@RequestHeader("Authorization") String token, @RequestBody PaymentRequest paymentRequest){
         try {
-            PaymentResponse response = loanService.payTermLoan(token.split(" ")[1], paymentRequest);
+            PaymentResponse response = loanService.payTermLoan(token, paymentRequest);
             return ResponseEntity.ok(response);
         }catch (Exception e){
-            return  ResponseEntity.badRequest().body(e.getMessage());
+            ErrorResponse response = ErrorResponse.builder()
+                    .message("Failed to pay loan: "+e.getMessage())
+                    .status(HttpStatus.BAD_REQUEST)
+                    .build();
+            return  ResponseEntity.badRequest().body(response);
         }
     }
 
@@ -51,9 +59,9 @@ public class LoanController {
     public ResponseEntity<?> approveLoan(@RequestHeader("Authorization") String token, @RequestBody Map<String, String> requestBody){
         try {
             String loanId = requestBody.get("loanId");
-            loanService.approveLoan(token.split(" ")[1], loanId);
+            loanService.approveLoan(token, loanId);
             MessageResponse response = MessageResponse.builder()
-                    .message("Yay loan approved successfully. Load ID: "+loanId)
+                    .message("Yay loan approved successfully. Loan ID: "+loanId)
                     .status(HttpStatus.OK)
                     .build();
             return ResponseEntity.status(HttpStatus.OK).body(response);
@@ -69,7 +77,7 @@ public class LoanController {
     @GetMapping("/getLoanById")
     public ResponseEntity<?> getLoanById(@RequestHeader("Authorization") String token, @RequestParam String loanId){
         try {
-            LoanStatusResponse response = loanService.getLoanById(token.split(" ")[1], loanId);
+            LoanStatusResponse response = loanService.getLoanById(token, loanId);
             return ResponseEntity.ok(response);
         }catch (Exception e){
             ErrorResponse errorResponse = ErrorResponse.builder()

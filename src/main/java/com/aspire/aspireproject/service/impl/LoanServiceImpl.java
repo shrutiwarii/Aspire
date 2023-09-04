@@ -37,10 +37,10 @@ public class LoanServiceImpl implements LoanService {
     private final JwtService jwtService;
 
     @Autowired
-    private LoanHelper loanHelper;
+    public LoanHelper loanHelper;
 
     @Autowired
-    private MockPaymentService mockPaymentService;
+    public MockPaymentService mockPaymentService;
 
 
     /**
@@ -52,10 +52,11 @@ public class LoanServiceImpl implements LoanService {
      */
     @Override
     public TakeLoanResponse requestLoan(TakeLoanRequest request, String token) {
+        String username = jwtService.extractUserName(token);
+        loanHelper.validRequestLoan(request);
         Date date = new Date();
         List<ScheduledLoanRepayment> list = loanHelper.createRePayments(request.getAmount(), request.getTerm(), date);
-        String username = jwtService.extractUserName(token);
-        var loan = Loan.builder().username(username)
+        Loan loan = Loan.builder().username(username)
                                 .status(LoanStatus.PENDING)
                                 .description(request.getDescription())
                                 .term(request.getTerm())
@@ -81,8 +82,8 @@ public class LoanServiceImpl implements LoanService {
      */
     @Override
     public List<LoanStatusResponse> getMyLoans( String token, LoanStatus status) {
-        List<Loan> myLoans;
         String username = jwtService.extractUserName(token);
+        List<Loan> myLoans;
         if (status==null) {
             myLoans = loanRepository.findByUsername(username).orElseThrow(() -> new UsernameNotFoundException("Invalid email or username"));
         } else {
@@ -117,15 +118,15 @@ public class LoanServiceImpl implements LoanService {
 
         loanHelper.validatePaymentRequest(loan, request);
         Loan updatedLoan;
-        PaymentResponse pr = new PaymentResponse();
+        PaymentResponse paymentResponse = new PaymentResponse();
 
         //check if the term date has passed then charge as per 1% interest per day and add it to the total amount to be paid and inform the customer in the response message
         if(loanHelper.isPreviousTermPayment(loan, request)) {
             updatedLoan = loanHelper.previousTermLoanUpdate(loan, request);
-            pr.setMessage("Updated a previous term with 1% interest");
+            paymentResponse.setMessage("Updated a previous term with 1% interest");
         }else{
             updatedLoan = loanHelper.updateLoan(loan,request);
-            pr.setMessage("Returning the excess amount");
+            paymentResponse.setMessage("Returning the excess amount");
         }
 
         // Simulate payment processing.
@@ -133,10 +134,10 @@ public class LoanServiceImpl implements LoanService {
         if (paymentSuccessful){
 
             loanRepository.save(updatedLoan);
-            pr.setTermNo(request.getTermNo());
-            pr.setStatus(LoanStatus.PAID);
+            paymentResponse.setTermNo(request.getTermNo());
+            paymentResponse.setStatus(LoanStatus.PAID);
 
-            return pr;
+            return paymentResponse;
         }
 
         throw new InvalidParameterException("Payment failed");
@@ -163,7 +164,7 @@ public class LoanServiceImpl implements LoanService {
         if (!LoanStatus.PENDING.equals(loan.getStatus()))
             throw new InvalidParameterException("Loan is not in PENDING state. Can't approve");
 
-        loan.setAssignee(username);
+        loan.setApprover(username);
         //Set conditions for rejecting the loan
         if(loan.getAmount()>1000000){
             loan.setStatus(LoanStatus.REJECTED);
@@ -186,15 +187,16 @@ public class LoanServiceImpl implements LoanService {
      */
     @Override
     public LoanStatusResponse getLoanById(String token, String loanId) {
-        Loan loan = loanRepository.findById(loanId).orElseThrow(()-> new InvalidLoanIdException("Invalid loan Id"));
         String username = jwtService.extractUserName(token);
         User user = userRepository.findByUsername(username).orElseThrow(() -> new UsernameNotFoundException("Invalid email or username"));
-        if (!username.equals(loan.getUsername())&&!user.getRole().equals(Role.ADMIN)) throw new InvalidParameterException("You are not the owner of this loan Id so you can't see the details");
+        Loan loan = loanRepository.findById(loanId).orElseThrow(()-> new InvalidLoanIdException("Invalid loan Id"));
+        if (!Role.ADMIN.equals(user.getRole())&&!username.equals(loan.getUsername())) throw new InvalidParameterException("You are not the owner of this loan Id so you can't see the details");
         return LoanStatusResponse.builder()
                 .id(loanId).status(loan.getStatus())
                 .listOfRepayment(loan.getScheduledLoanRepayment())
                 .description(loan.getDescription())
                 .termsLeft(loan.getTermsLeft())
+                .username(username)
                 .build();
     }
 }
