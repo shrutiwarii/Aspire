@@ -15,4 +15,6 @@ public interface LoanRepository extends MongoRepository<Loan,String> {
 
     @NotNull
     Optional<Loan> findById(@NotNull String Id);
+
+    Optional<Loan> findByIdempotencyTokenAndStatus(String token, LoanStatus status);
 }

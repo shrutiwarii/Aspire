@@ -37,7 +37,7 @@ class LoanHelperTest {
         TakeLoanRequest request = new TakeLoanRequest();
         request.setAmount(1000.0);
         request.setTerm(12);
-        assertDoesNotThrow(() -> loanHelper.validRequestLoan(request));
+        assertDoesNotThrow(() -> loanHelper.validateRequestLoan(request));
     }
 
     @Test
@@ -46,7 +46,7 @@ class LoanHelperTest {
         TakeLoanRequest request = new TakeLoanRequest();
         request.setAmount(0.0);
         request.setTerm(0);
-        assertThrows(InvalidParameterException.class, () -> loanHelper.validRequestLoan(request));
+        assertThrows(InvalidParameterException.class, () -> loanHelper.validateRequestLoan(request));
     }
 
     @Test
