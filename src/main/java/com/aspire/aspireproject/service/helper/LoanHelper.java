@@ -6,16 +6,40 @@ import com.aspire.aspireproject.model.loan.Loan;
 import com.aspire.aspireproject.model.loan.LoanStatus;
 import com.aspire.aspireproject.model.loan.ScheduledLoanRepayment;
 import org.springframework.stereotype.Component;
+import org.springframework.util.DigestUtils;
 
 import java.security.InvalidParameterException;
+import java.security.MessageDigest;
 import java.util.*;
 import java.util.stream.Collectors;
 
 @Component
 public class LoanHelper {
 
-    public void validRequestLoan(TakeLoanRequest request){
-        if(request.getAmount()==null || request.getTerm()==null || request.getTerm()==0 || request.getAmount()==0)
+    public String generateToken(TakeLoanRequest request, String username){
+        String inputData = username + request.getAmount() + request.getTerm();
+        try {
+            MessageDigest digest = MessageDigest.getInstance("SHA-256");
+
+            byte[] hashBytes = digest.digest(inputData.getBytes());
+
+            StringBuilder hexString = new StringBuilder();
+            for (byte hashByte : hashBytes) {
+                String hex = Integer.toHexString(0xff & hashByte);
+                if (hex.length() == 1) {
+                    hexString.append('0');
+                }
+                hexString.append(hex);
+            }
+
+            return hexString.toString();
+        } catch (Exception e) {
+            throw new RuntimeException("SHA-256 algorithm not available", e);
+        }
+
+    }
+    public void validateRequestLoan(TakeLoanRequest request){
+        if(request.getAmount()==null || request.getTerm()==null || request.getTerm()<=0 || request.getAmount()<=0 )
             throw new InvalidParameterException("Please provide correct values for required fields: AMOUNT and TERM");
     }
 

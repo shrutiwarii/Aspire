@@ -23,6 +23,7 @@ public class AuthHelper {
 
     public boolean isBankEmployee(String username){
         String domain = extractEmailDomain(username);
+        if (domain==null) throw new InvalidParameterException("Invalid username. Please provide a valid email as your username");
         return Objects.equals(domain, "aspire.com");
     }
 

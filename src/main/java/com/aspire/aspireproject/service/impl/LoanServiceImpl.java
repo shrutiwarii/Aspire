@@ -43,6 +43,12 @@ public class LoanServiceImpl implements LoanService {
     public MockPaymentService mockPaymentService;
 
 
+    private Loan checkIfDuplicate(String token){
+        return loanRepository.findByIdempotencyTokenAndStatus(token, LoanStatus.PENDING).orElse(null);
+    }
+
+
+    //TODO: Make this idempotent
     /**
      * Requests a loan with the provided information and returns the loan ID and status.
      *
@@ -53,19 +59,28 @@ public class LoanServiceImpl implements LoanService {
     @Override
     public TakeLoanResponse requestLoan(TakeLoanRequest request, String token) {
         String username = jwtService.extractUserName(token);
-        loanHelper.validRequestLoan(request);
+        String idempotencyToken = loanHelper.generateToken(request, username);
+        Loan isDuplicateLoan = checkIfDuplicate(idempotencyToken);
+        if(isDuplicateLoan!=null){
+            TakeLoanResponse response = new TakeLoanResponse();
+            response.setId(isDuplicateLoan.getId());
+            response.setStatus(isDuplicateLoan.getStatus());
+            return response;
+        }
+        loanHelper.validateRequestLoan(request);
         Date date = new Date();
         List<ScheduledLoanRepayment> list = loanHelper.createRePayments(request.getAmount(), request.getTerm(), date);
         Loan loan = Loan.builder().username(username)
-                                .status(LoanStatus.PENDING)
-                                .description(request.getDescription())
-                                .term(request.getTerm())
-                                .amount(request.getAmount())
-                                .dateCreated(date)
-                                .scheduledLoanRepayment(list)
-                                .termsLeft(request.getTerm())
-                                .amountRemaining(request.getAmount())
-                                .build();
+                    .status(LoanStatus.PENDING)
+                    .description(request.getDescription())
+                    .term(request.getTerm())
+                    .amount(request.getAmount())
+                    .dateCreated(date)
+                    .scheduledLoanRepayment(list)
+                    .termsLeft(request.getTerm())
+                    .amountRemaining(request.getAmount())
+                    .idempotencyToken(idempotencyToken)
+                    .build();
         loanRepository.save(loan);
         TakeLoanResponse response = new TakeLoanResponse();
         response.setId(loan.getId());
