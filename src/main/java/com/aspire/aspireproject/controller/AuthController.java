@@ -22,7 +22,7 @@ public class AuthController {
     }
 
     @PostMapping("/signup")
-    synchronized public ResponseEntity<? > signup(@RequestBody SignUpRequest request) {
+    synchronized public ResponseEntity<?> signup(@RequestBody SignUpRequest request) {
         try{
             authService.signup(request);
             return ResponseEntity.ok("Successful");

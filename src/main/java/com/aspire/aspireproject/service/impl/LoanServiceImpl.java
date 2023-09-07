@@ -48,7 +48,6 @@ public class LoanServiceImpl implements LoanService {
     }
 
 
-    //TODO: Make this idempotent
     /**
      * Requests a loan with the provided information and returns the loan ID and status.
      *
