@@ -5,6 +5,8 @@ import org.springframework.stereotype.Component;
 
 import java.security.InvalidParameterException;
 import java.util.Objects;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
 import static com.aspire.aspireproject.model.user.Role.ADMIN;
 import static com.aspire.aspireproject.model.user.Role.CUSTOMER;
@@ -27,9 +29,22 @@ public class AuthHelper {
         return Objects.equals(domain, "aspire.com");
     }
 
+    public boolean isValidEmail(String email){
+        String regex = "^[A-Za-z0-9+_.-]+@[A-Za-z0-9.-]+\\.[A-Za-z]{2,}$";
+
+        Pattern pattern = Pattern.compile(regex);
+
+        Matcher matcher = pattern.matcher(email);
+
+        return matcher.matches();
+    }
+
     public void validateSignupParams(SignUpRequest request){
         if(request.getUsername().isEmpty() || request.getPassword().isEmpty() || request.getRole().isEmpty() || request.getFirstName().isEmpty() || request.getLastName().isEmpty())
             throw new InvalidParameterException("Required fields missing");
+
+        if (!isValidEmail(request.getUsername()))
+            throw new InvalidParameterException("Not correct email");
 
         String role = request.getRole().toLowerCase();
         String username = request.getUsername();
